@@ -1,7 +1,11 @@
 {
-  "version": 2,
   "buildCommand": "bun install && bunx expo export --platform web",
   "outputDirectory": "dist",
+  "functions": {
+    "api/**/*.{js,ts}": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
