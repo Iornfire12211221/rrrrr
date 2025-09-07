@@ -10,7 +10,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: oven-sh/setup-bun@v1
-    - run: bun install
+      with:
+        bun-version: latest
+    - name: Install dependencies
+      run: bun install
     - name: Build web
       run: bunx expo export --platform web
     - name: Deploy to Vercel
@@ -20,3 +23,4 @@ jobs:
         vercel-org-id: ${{ secrets.ORG_ID }}
         vercel-project-id: ${{ secrets.PROJECT_ID }}
         working-directory: ./
+        vercel-args: '--prod'
