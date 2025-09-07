@@ -234,7 +234,6 @@ export default function AdminScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowLeft size={20} color="#000" />
         </TouchableOpacity>
-
         <View style={styles.placeholder} />
       </View>
 
