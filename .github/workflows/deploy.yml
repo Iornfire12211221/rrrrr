@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to Vercel
 
 on:
   push:
@@ -13,7 +13,10 @@ jobs:
     - run: bun install
     - name: Build web
       run: bunx expo export --platform web
-    - uses: peaceiris/actions-gh-pages@v3
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v25
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.ORG_ID }}
+        vercel-project-id: ${{ secrets.PROJECT_ID }}
+        working-directory: ./
