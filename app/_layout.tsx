@@ -27,7 +27,7 @@ function RootLayoutNav() {
       />
       <Stack.Screen
         name="admin"
-        options={{ presentation: "modal", title: "" }}
+        options={{ presentation: "modal", headerShown: false }}
       />
       <Stack.Screen
         name="auth"
