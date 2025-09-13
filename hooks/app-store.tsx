@@ -79,14 +79,15 @@ export const [AppProviderInternal, useAppInternal] = createContextHook(() => {
           const parsedUsers = JSON.parse(storedUsers);
           setUsers(parsedUsers);
           
-          // Создаем только админа если его нет
-          const adminExists = parsedUsers.find((u: User) => u.email === 'admin@demo.com');
+          // Проверяем, есть ли админ @herlabsn
+          const adminExists = parsedUsers.find((u: User) => u.telegramUsername === 'herlabsn');
           
           if (!adminExists) {
+            // Создаем админа только если его нет
             const adminUser: User = {
-              id: 'admin-demo',
+              id: 'admin-herlabsn',
               name: 'Администратор',
-              email: 'admin@demo.com',
+              telegramUsername: 'herlabsn',
               isAdmin: true,
               isModerator: true,
               registeredAt: Date.now(),
@@ -97,11 +98,11 @@ export const [AppProviderInternal, useAppInternal] = createContextHook(() => {
             await AsyncStorage.setItem('all_users', JSON.stringify(updatedUsers));
           }
         } else {
-          // Создаем только админа
+          // Создаем только админа @herlabsn
           const adminUser: User = {
-            id: 'admin-demo',
+            id: 'admin-herlabsn',
             name: 'Администратор',
-            email: 'admin@demo.com',
+            telegramUsername: 'herlabsn',
             isAdmin: true,
             isModerator: true,
             registeredAt: Date.now(),
@@ -684,15 +685,7 @@ ${description ? `Описание от пользователя: "${description}
 
   const loginUser = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
-      // Демо админ
-      if (email === 'admin@demo.com' && password === '123456') {
-        const adminUser = users.find(u => u.email === 'admin@demo.com');
-        if (adminUser) {
-          setCurrentUser(adminUser);
-          await AsyncStorage.setItem('current_user', JSON.stringify(adminUser));
-          return true;
-        }
-      }
+      // Убираем демо режим - авторизация только через Telegram
 
       // Обычные пользователи
       const user = users.find(u => u.email === email);
@@ -732,6 +725,9 @@ ${description ? `Описание от пользователя: "${description}
           isPremium: telegramData.isPremium,
           photoUrl: telegramData.photoUrl,
           name: `${telegramData.firstName} ${telegramData.lastName || ''}`.trim(),
+          // Проверяем, является ли пользователь админом @herlabsn
+          isAdmin: telegramData.username === 'herlabsn' ? true : existingUser.isAdmin,
+          isModerator: telegramData.username === 'herlabsn' ? true : existingUser.isModerator,
         };
         
         // Обновляем в массиве пользователей
@@ -758,8 +754,9 @@ ${description ? `Описание от пользователя: "${description}
           languageCode: telegramData.languageCode,
           isPremium: telegramData.isPremium,
           photoUrl: telegramData.photoUrl,
-          isAdmin: false,
-          isModerator: false,
+          // Проверяем, является ли пользователь админом @herlabsn
+          isAdmin: telegramData.username === 'herlabsn',
+          isModerator: telegramData.username === 'herlabsn',
           registeredAt: Date.now(),
         };
         

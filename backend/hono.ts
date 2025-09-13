@@ -32,6 +32,11 @@ api.get("/", (c) => {
   return c.json({ status: "ok", message: "API is running" });
 });
 
+// Health check endpoint for Docker
+api.get("/health", (c) => {
+  return c.json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 // Mount API at /api
 app.route("/api", api);
 
@@ -64,6 +69,11 @@ if (process.env.NODE_ENV === "production") {
   app.use("/assets/*", serveStatic({ root: "./dist" }));
   app.use("/favicon.ico", serveStatic({ path: "./dist/favicon.ico" }));
   
+    // Health check endpoint at root level
+  app.get("/health", (c) => {
+    return c.json({ status: "healthy", timestamp: new Date().toISOString() });
+  });
+  
   // Serve index.html for root and all other routes (SPA fallback)
   app.get("/", serveStatic({ path: "./dist/index.html" }));
   app.get("*", serveStatic({ path: "./dist/index.html" }));
@@ -72,15 +82,28 @@ if (process.env.NODE_ENV === "production") {
   app.get("/", (c) => {
     return c.json({ status: "ok", message: "Development server running" });
   });
+  
+  // Health check endpoint for development
+  app.get("/health", (c) => {
+    return c.json({ status: "healthy", timestamp: new Date().toISOString() });
+  });
 }
 
 // Start server
 const port = process.env.PORT || 8081;
-console.log(`Server running on port ${port}`);
+console.log(`Starting server on port ${port}`);
+console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`Current working directory: ${process.cwd()}`);
 
 serve({
   fetch: app.fetch,
   port: Number(port),
+  hostname: '0.0.0.0', // Bind to all interfaces
+}, (info) => {
+  console.log(`✅ Server successfully started on http://0.0.0.0:${info.port}`);
+  console.log(`🔗 Health check available at: http://0.0.0.0:${info.port}/health`);
+  console.log(`🌐 API available at: http://0.0.0.0:${info.port}/api`);
+  console.log(`📱 Ready for Telegram Mini App at: https://24dps.ru`);
 });
 
 export default app;
