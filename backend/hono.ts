@@ -19,6 +19,10 @@ api.get("/health", (c) => c.json({ status: "healthy", timestamp: new Date().toIS
 api.all("/*", (c) => c.json({ status: "ok" }));
 app.route("/api", api);
 
+// Health check endpoints for hosting providers
+app.get("/health", (c) => c.json({ status: "healthy", timestamp: new Date().toISOString() }));
+app.get("/", (c) => c.json({ status: "ok", message: "Kingisepp DPS App" }));
+
 // Always respond 200 to HEAD probes (hosting health checks)
 app.on("HEAD", "/", (c) => c.text("", 200));
 app.on("HEAD", "/health", (c) => c.text("", 200));
@@ -73,36 +77,34 @@ if (process.env.NODE_ENV === "production") {
   try {
     distExists = fs.existsSync(distPath);
   } catch {}
-  app.get("/health", (c) => c.json({ status: "healthy", timestamp: new Date().toISOString() }));
+  
   if (distExists) {
+    console.log(`✅ Found dist directory at: ${distPath}`);
     app.use("/_expo/*", serveStatic(nodeServeStaticOptions("./dist")));
     app.use("/assets/*", serveStatic(nodeServeStaticOptions("./dist")));
     app.use("/favicon.ico", serveStatic(nodeServeStaticOptions("./dist", "favicon.ico")));
     app.get("/*", serveStatic(nodeServeStaticOptions("./dist", "index.html")));
   } else {
-    app.get("/", (c) => c.text("Build not found", 200));
-    app.get("/*", (c) => c.text("Build not found", 200));
+    console.log(`❌ Dist directory not found at: ${distPath}`);
+    app.get("/*", (c) => c.text("App is starting...", 200));
   }
-} else {
-  app.get("/", (c) => c.json({ status: "ok", message: "Development" }));
-  app.get("/health", (c) => c.json({ status: "healthy", timestamp: new Date().toISOString() }));
 }
 
 // Start server
 const port = process.env.PORT || 8081;
-console.log(`Starting server on port ${port}`);
-console.log(`Environment: ${process.env.NODE_ENV}`);
-console.log(`Current working directory: ${process.cwd()}`);
+console.log(`🚀 Starting Kingisepp DPS server...`);
+console.log(`📍 Port: ${port}`);
+console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+console.log(`📁 Working directory: ${process.cwd()}`);
 
 serve({
   fetch: app.fetch,
   port: Number(port),
-  hostname: '0.0.0.0', // Bind to all interfaces
+  hostname: '0.0.0.0',
 }, (info) => {
-  console.log(`✅ Server successfully started on http://0.0.0.0:${info.port}`);
-  console.log(`🔗 Health check available at: http://0.0.0.0:${info.port}/health`);
-  console.log(`🌐 API available at: http://0.0.0.0:${info.port}/api`);
-  console.log(`📱 Ready for Telegram Mini App at: https://24dps.ru`);
+  console.log(`✅ Server running on http://0.0.0.0:${info.port}`);
+  console.log(`💚 Health: http://0.0.0.0:${info.port}/health`);
+  console.log(`🔗 API: http://0.0.0.0:${info.port}/api`);
 });
 
 export default app;
