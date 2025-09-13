@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import { trpcServer } from "@hono/trpc-server";
 import { cors } from "hono/cors";
-import { serveStatic } from "hono/bun";
+import { serveStatic } from "hono/serve-static";
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 import { serve } from "@hono/node-server";
 import fs from "fs";
 import path from "path";
+import type { Env } from "hono";
 
 // Create main app
 const app = new Hono();
@@ -40,43 +41,63 @@ api.get("/health", (c) => {
 // Mount API at /api
 app.route("/api", api);
 
+// Helper to build serveStatic options for Node
+function nodeServeStaticOptions(rootDir: string, filePath?: string) {
+  return {
+    root: rootDir,
+    path: filePath,
+    // Hono Node runtime needs getContent to be defined when using serve-static
+    async getContent(relPath: string) {
+      const resolved = filePath ? path.join(process.cwd(), rootDir, filePath) : path.join(process.cwd(), rootDir, relPath);
+      try {
+        const statOk = fs.existsSync(resolved) && fs.statSync(resolved).isFile();
+        if (!statOk) return null;
+        const data = await fs.promises.readFile(resolved);
+        return data;
+      } catch (e) {
+        console.error('Static getContent error for', resolved, e);
+        return null;
+      }
+    },
+    join: (...paths: string[]) => path.join(...paths),
+    pathResolve: (p: string) => path.resolve(p),
+    isDir: (p: string) => {
+      try {
+        return fs.existsSync(p) && fs.statSync(p).isDirectory();
+      } catch {
+        return false;
+      }
+    },
+  } as const satisfies Parameters<typeof serveStatic<Env>>[0];
+}
+
 // Serve static files from dist directory (for production)
 if (process.env.NODE_ENV === "production") {
   console.log("Production mode: serving static files from ./dist");
-  
-  // Check if dist directory exists
   const distPath = path.join(process.cwd(), 'dist');
   console.log('Checking dist directory:', distPath);
-  
   try {
     const distExists = fs.existsSync(distPath);
     console.log('Dist directory exists:', distExists);
-    
     if (distExists) {
       const files = fs.readdirSync(distPath);
       console.log('Files in dist:', files);
-      
       const indexExists = fs.existsSync(path.join(distPath, 'index.html'));
       console.log('index.html exists:', indexExists);
     }
   } catch (error) {
     console.error('Error checking dist directory:', error);
   }
-  
-  // Serve static assets with proper paths
-  app.use("/_expo/*", serveStatic({ root: "./dist" }));
-  app.use("/static/*", serveStatic({ root: "./dist" }));
-  app.use("/assets/*", serveStatic({ root: "./dist" }));
-  app.use("/favicon.ico", serveStatic({ path: "./dist/favicon.ico" }));
-  
-    // Health check endpoint at root level
+  // Static assets
+  app.use("/_expo/*", serveStatic(nodeServeStaticOptions("./dist")));
+  app.use("/assets/*", serveStatic(nodeServeStaticOptions("./dist")));
+  app.use("/favicon.ico", serveStatic(nodeServeStaticOptions("./dist", "favicon.ico")));
+  // Health check endpoint at root level
   app.get("/health", (c) => {
     return c.json({ status: "healthy", timestamp: new Date().toISOString() });
   });
-  
-  // Serve index.html for root and all other routes (SPA fallback)
-  app.get("/", serveStatic({ path: "./dist/index.html" }));
-  app.get("*", serveStatic({ path: "./dist/index.html" }));
+  // SPA fallback
+  app.get("/*", serveStatic(nodeServeStaticOptions("./dist", "index.html")));
 } else {
   // Development mode - just serve API
   app.get("/", (c) => {
