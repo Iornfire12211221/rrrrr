@@ -27,7 +27,22 @@ ENV PORT=8081
 # Build web app
 RUN npx expo export --platform web
 
+# Debug: Check if dist was created
+RUN ls -la ./dist/ || echo "dist directory not found"
+RUN ls -la ./dist/_expo/ || echo "_expo directory not found"
+RUN sh -c "[ -f ./dist/index.html ] && head -20 ./dist/index.html || echo 'index.html not found'"
+
 EXPOSE 8081
 
+# Create startup script
+RUN echo '#!/bin/bash' > /app/start.sh && \
+    echo 'echo "🚀 Starting Kingisepp DPS App..."' >> /app/start.sh && \
+    echo 'echo "📁 Working directory: $(pwd)"' >> /app/start.sh && \
+    echo 'echo "🔍 Checking dist directory..."' >> /app/start.sh && \
+    echo 'ls -la ./dist/ 2>/dev/null || echo "❌ No dist directory"' >> /app/start.sh && \
+    echo 'echo "🌐 Starting simple server on port 8081..."' >> /app/start.sh && \
+    echo 'exec bun run backend/simple-server.ts' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
 # Start server
-CMD ["bun", "run", "backend/hono.ts"]
+CMD ["/app/start.sh"]
