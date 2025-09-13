@@ -7,7 +7,7 @@ import { createContext } from "./trpc/create-context";
 import { serve } from "@hono/node-server";
 import fs from "fs";
 import path from "path";
-import type { Env } from "hono";
+import type { Context, Env } from "hono";
 
 // Create main app
 const app = new Hono();
@@ -47,13 +47,13 @@ function nodeServeStaticOptions(rootDir: string, filePath?: string) {
     root: rootDir,
     path: filePath,
     // Hono Node runtime needs getContent to be defined when using serve-static
-    async getContent(relPath: string) {
+    async getContent(relPath: string, _c: Context<Env>) {
       const resolved = filePath ? path.join(process.cwd(), rootDir, filePath) : path.join(process.cwd(), rootDir, relPath);
       try {
         const statOk = fs.existsSync(resolved) && fs.statSync(resolved).isFile();
         if (!statOk) return null;
         const data = await fs.promises.readFile(resolved);
-        return data;
+        return new Response(data);
       } catch (e) {
         console.error('Static getContent error for', resolved, e);
         return null;
