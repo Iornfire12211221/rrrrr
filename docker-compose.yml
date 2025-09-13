@@ -7,11 +7,4 @@ services:
       - "8081:8081"
     environment:
       - NODE_ENV=production
-    volumes:
-      - .:/app
-      - /app/node_modules
     restart: unless-stopped
-
-networks:
-  default:
-    driver: bridge
