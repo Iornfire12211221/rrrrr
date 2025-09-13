@@ -46,9 +46,12 @@ function nodeServeStaticOptions(rootDir: string, filePath?: string) {
   return {
     root: rootDir,
     path: filePath,
-    // Hono Node runtime needs getContent to be defined when using serve-static
     async getContent(relPath: string, _c: Context<Env>) {
-      const resolved = filePath ? path.join(process.cwd(), rootDir, filePath) : path.join(process.cwd(), rootDir, relPath);
+      const safeRel = typeof relPath === 'string' ? relPath.trim() : '';
+      if (!safeRel || safeRel.length > 512) return null;
+      const resolved = filePath
+        ? path.join(process.cwd(), rootDir, filePath)
+        : path.join(process.cwd(), rootDir, safeRel);
       try {
         const statOk = fs.existsSync(resolved) && fs.statSync(resolved).isFile();
         if (!statOk) return null;
@@ -69,10 +72,14 @@ function nodeServeStaticOptions(rootDir: string, filePath?: string) {
       }
     },
     join: (...paths: string[]) => path.join(...paths),
-    pathResolve: (p: string) => path.resolve(p),
+    pathResolve: (p: string) => {
+      const safe = typeof p === 'string' ? p.trim() : '';
+      return path.resolve(safe || '.');
+    },
     isDir: (p: string) => {
+      const safe = typeof p === 'string' ? p.trim() : '';
       try {
-        return fs.existsSync(p) && fs.statSync(p).isDirectory();
+        return !!safe && fs.existsSync(safe) && fs.statSync(safe).isDirectory();
       } catch {
         return false;
       }
