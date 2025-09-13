@@ -19,6 +19,11 @@ api.get("/health", (c) => c.json({ status: "healthy", timestamp: new Date().toIS
 api.all("/*", (c) => c.json({ status: "ok" }));
 app.route("/api", api);
 
+// Always respond 200 to HEAD probes (hosting health checks)
+app.on("HEAD", "/", (c) => c.text("", 200));
+app.on("HEAD", "/health", (c) => c.text("", 200));
+app.on("HEAD", "/*", (c) => c.text("", 200));
+
 // Helper to build serveStatic options for Node
 function nodeServeStaticOptions(rootDir: string, filePath?: string) {
   return {
