@@ -41,7 +41,7 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'echo "🔍 Checking dist directory..."' >> /app/start.sh && \
     echo 'ls -la ./dist/ 2>/dev/null || echo "❌ No dist directory"' >> /app/start.sh && \
     echo 'echo "🌐 Starting simple server on port 8081..."' >> /app/start.sh && \
-    echo 'exec bun run backend/simple-server.ts' >> /app/start.sh && \
+    echo 'exec bun backend/simple-server.ts' >> /app/start.sh && \
     chmod +x /app/start.sh
 
 # Start server
