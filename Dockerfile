@@ -16,10 +16,10 @@ COPY . .
 ENV NODE_ENV=production
 ENV EXPO_USE_FAST_RESOLVER=1
 
-# Build the web app
-RUN npx expo export:web
+# Build the web app using Metro bundler
+RUN npx expo export --platform web
 
 EXPOSE 8081
 
 # Serve the built files
-CMD ["npx", "serve", "web-build", "-s", "-p", "8081"]
+CMD ["npx", "serve", "dist", "-s", "-p", "8081"]
