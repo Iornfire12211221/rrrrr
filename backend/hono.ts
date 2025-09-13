@@ -53,7 +53,16 @@ function nodeServeStaticOptions(rootDir: string, filePath?: string) {
         const statOk = fs.existsSync(resolved) && fs.statSync(resolved).isFile();
         if (!statOk) return null;
         const data = await fs.promises.readFile(resolved);
-        return new Response(data);
+        const ext = path.extname(resolved);
+        const mime = ext === '.html' ? 'text/html; charset=utf-8'
+          : ext === '.js' ? 'application/javascript; charset=utf-8'
+          : ext === '.css' ? 'text/css; charset=utf-8'
+          : ext === '.json' ? 'application/json; charset=utf-8'
+          : ext === '.png' ? 'image/png'
+          : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
+          : ext === '.svg' ? 'image/svg+xml'
+          : undefined;
+        return new Response(data, { headers: mime ? { 'Content-Type': mime } : undefined });
       } catch (e) {
         console.error('Static getContent error for', resolved, e);
         return null;
@@ -76,8 +85,9 @@ if (process.env.NODE_ENV === "production") {
   console.log("Production mode: serving static files from ./dist");
   const distPath = path.join(process.cwd(), 'dist');
   console.log('Checking dist directory:', distPath);
+  let distExists = false;
   try {
-    const distExists = fs.existsSync(distPath);
+    distExists = fs.existsSync(distPath);
     console.log('Dist directory exists:', distExists);
     if (distExists) {
       const files = fs.readdirSync(distPath);
@@ -88,16 +98,22 @@ if (process.env.NODE_ENV === "production") {
   } catch (error) {
     console.error('Error checking dist directory:', error);
   }
-  // Static assets
-  app.use("/_expo/*", serveStatic(nodeServeStaticOptions("./dist")));
-  app.use("/assets/*", serveStatic(nodeServeStaticOptions("./dist")));
-  app.use("/favicon.ico", serveStatic(nodeServeStaticOptions("./dist", "favicon.ico")));
   // Health check endpoint at root level
   app.get("/health", (c) => {
     return c.json({ status: "healthy", timestamp: new Date().toISOString() });
   });
-  // SPA fallback
-  app.get("/*", serveStatic(nodeServeStaticOptions("./dist", "index.html")));
+  if (distExists) {
+    // Static assets
+    app.use("/_expo/*", serveStatic(nodeServeStaticOptions("./dist")));
+    app.use("/assets/*", serveStatic(nodeServeStaticOptions("./dist")));
+    app.use("/favicon.ico", serveStatic(nodeServeStaticOptions("./dist", "favicon.ico")));
+    // SPA fallback
+    app.get("/*", serveStatic(nodeServeStaticOptions("./dist", "index.html")));
+  } else {
+    console.warn('dist directory not found. Serving minimal online page.');
+    app.get("/", (c) => c.text("Server is running. Build not found.", 200));
+    app.get("/*", (c) => c.text("Server is running. Build not found.", 200));
+  }
 } else {
   // Development mode - just serve API
   app.get("/", (c) => {
