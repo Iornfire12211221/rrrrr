@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useApp } from '@/hooks/app-store';
 import { Send, User } from 'lucide-react-native';
+import LoadingOverlay from '@/components/LoadingOverlay';
+
 
 
 export default function ChatScreen() {
@@ -19,17 +21,21 @@ export default function ChatScreen() {
   const visibleMessages = messages.filter(msg => !msg.isDeleted);
   const [inputText, setInputText] = useState('');
   const [mutedMessage, setMutedMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     // Scroll to bottom when new message arrives
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
+    return () => clearTimeout(timer);
   }, [visibleMessages]);
 
-  const handleSend = () => {
-    if (inputText.trim()) {
+
+
+  const handleSend = async () => {
+    if (inputText.trim() && !isSending) {
       const messageText = inputText.trim();
       
       // Проверяем, не заглушен ли пользователь
@@ -40,10 +46,15 @@ export default function ChatScreen() {
         return;
       }
       
-      const success = addMessage(messageText);
-      if (success) {
-        setInputText('');
-        Keyboard.dismiss();
+      setIsSending(true);
+      try {
+        const success = addMessage(messageText);
+        if (success) {
+          setInputText('');
+          Keyboard.dismiss();
+        }
+      } finally {
+        setIsSending(false);
       }
     }
   };
@@ -188,6 +199,11 @@ export default function ChatScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
+      <LoadingOverlay
+        visible={isSending}
+        label="Отправка сообщения..."
+        testID="chat-sending-loading"
+      />
     </View>
   );
 }

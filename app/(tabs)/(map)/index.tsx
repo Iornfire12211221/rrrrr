@@ -2459,7 +2459,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 10,
-    cursor: 'pointer',
+    ...(Platform.OS === 'web' && { cursor: 'pointer' }),
   },
   rightSideButtonLoading: {
     backgroundColor: '#5A9FFF',
