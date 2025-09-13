@@ -5,8 +5,8 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Install bun and static file server (use npx for Expo CLI to avoid PATH issues)
-RUN npm install -g bun serve
+# Install bun globally
+RUN npm install -g bun
 
 # Copy package files first for better caching
 COPY package.json bun.lock* ./
@@ -26,5 +26,5 @@ RUN npx expo export --platform web
 
 EXPOSE 8081
 
-# Serve the built files
-CMD ["serve", "-s", "dist", "-l", "tcp://0.0.0.0:8081"]
+# Start the backend server (which serves both API and web files)
+CMD ["bun", "run", "backend/hono.ts"]
