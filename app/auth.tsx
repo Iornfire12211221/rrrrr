@@ -173,31 +173,32 @@ export default function AuthScreen() {
     }
   };
   
-  const handleFallbackAuth = () => {
-    // Для демо - автоматически логинимся как демо пользователь
-    Alert.alert(
-      'Демо режим',
-      'Приложение запущено вне Telegram. Войти как демо пользователь?',
-      [
-        { text: 'Отмена', style: 'cancel' },
-        { 
-          text: 'Войти', 
-          onPress: async () => {
-            setIsLoading(true);
-            const success = await loginWithTelegram({
-              telegramId: 12345,
-              firstName: 'Демо',
-              lastName: 'Пользователь',
-              username: 'demo_user',
-            });
-            if (success) {
-              router.replace('/');
-            }
-            setIsLoading(false);
-          }
-        }
-      ]
-    );
+  const handleFallbackAuth = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Starting demo login...');
+      const success = await loginWithTelegram({
+        telegramId: 12345,
+        firstName: 'Демо',
+        lastName: 'Пользователь',
+        username: 'demo_user',
+      });
+      console.log('Demo login result:', success);
+      if (success) {
+        console.log('Demo login successful, redirecting...');
+        router.replace('/');
+      } else {
+        console.log('Demo login failed');
+        setErrorMessage('Не удалось войти в демо режим');
+        setAuthStatus('error');
+      }
+    } catch (error) {
+      console.error('Demo login error:', error);
+      setErrorMessage('Ошибка входа в демо режим');
+      setAuthStatus('error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isLoading && authStatus === 'checking') {
@@ -251,9 +252,14 @@ export default function AuthScreen() {
               onPress={handleTelegramAuth}
               disabled={isLoading}
             >
-              <Text style={styles.authButtonText}>
-                {isLoading ? 'Авторизация...' : 'Продолжить'}
-              </Text>
+              {isLoading ? (
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={styles.buttonLoader} />
+                  <Text style={styles.authButtonText}>Авторизация...</Text>
+                </View>
+              ) : (
+                <Text style={styles.authButtonText}>Продолжить</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -269,10 +275,18 @@ export default function AuthScreen() {
             </View>
             
             <TouchableOpacity 
-              style={styles.demoButton}
+              style={[styles.demoButton, isLoading && styles.demoButtonDisabled]}
               onPress={handleFallbackAuth}
+              disabled={isLoading}
             >
-              <Text style={styles.demoButtonText}>Войти в демо режиме</Text>
+              {isLoading ? (
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={styles.buttonLoader} />
+                  <Text style={styles.demoButtonText}>Вход...</Text>
+                </View>
+              ) : (
+                <Text style={styles.demoButtonText}>Войти в демо режиме</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -284,18 +298,27 @@ export default function AuthScreen() {
             <Text style={styles.errorText}>{errorMessage}</Text>
             
             <TouchableOpacity 
-              style={styles.retryButton}
+              style={[styles.retryButton, isLoading && styles.retryButtonDisabled]}
               onPress={() => {
                 setAuthStatus('checking');
                 setIsLoading(true);
+                setErrorMessage('');
                 // Перезапускаем инициализацию
                 setTimeout(() => {
                   setAuthStatus('fallback');
                   setIsLoading(false);
                 }, 1000);
               }}
+              disabled={isLoading}
             >
-              <Text style={styles.retryButtonText}>Попробовать снова</Text>
+              {isLoading ? (
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={styles.buttonLoader} />
+                  <Text style={styles.retryButtonText}>Проверка...</Text>
+                </View>
+              ) : (
+                <Text style={styles.retryButtonText}>Попробовать снова</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -440,10 +463,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 200,
   },
+  demoButtonDisabled: {
+    opacity: 0.5,
+  },
   demoButtonText: {
     fontSize: 17,
     fontWeight: '600' as const,
     color: '#FFFFFF',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonLoader: {
+    marginRight: 8,
   },
   errorContainer: {
     alignItems: 'center',
@@ -468,6 +502,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  retryButtonDisabled: {
+    opacity: 0.5,
   },
   retryButtonText: {
     fontSize: 16,
