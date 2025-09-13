@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# System deps for some node modules (sharp, etc.)
+RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
 # Install bun and static file server (use npx for Expo CLI to avoid PATH issues)
@@ -12,9 +15,11 @@ RUN bun install
 # Copy source code
 COPY . .
 
-# Set environment for production
+# Environment
 ENV NODE_ENV=production
 ENV EXPO_USE_FAST_RESOLVER=1
+ENV EXPO_NO_TELEMETRY=1
+ENV EXPO_NON_INTERACTIVE=1
 
 # Build static web app (Expo SDK 53 exports to ./dist by default)
 RUN npx expo export --platform web
