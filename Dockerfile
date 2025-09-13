@@ -5,12 +5,12 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Install bun globally
-RUN npm install -g bun
+# Install bun and serve globally
+RUN npm install -g bun serve
 
 # Copy package files first for better caching
 COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy source code
 COPY . .
@@ -24,8 +24,10 @@ ENV EXPO_NON_INTERACTIVE=1
 # Build static web app
 RUN npx expo export --platform web
 
-# Make build script executable
-RUN chmod +x build.sh
+# Debug: List contents of dist directory
+RUN ls -la ./dist/ || echo "dist directory not found"
+RUN ls -la ./dist/_expo/ || echo "_expo directory not found"
+RUN cat ./dist/index.html | head -20 || echo "index.html not found"
 
 EXPOSE 8081
 

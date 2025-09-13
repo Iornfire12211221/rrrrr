@@ -173,41 +173,7 @@ export default function AuthScreen() {
     }
   };
   
-  const handleFallbackAuth = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Starting demo login...');
-      
-      // Добавляем небольшую задержку для показа анимации
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const success = await loginWithTelegram({
-        telegramId: 12345,
-        firstName: 'Демо',
-        lastName: 'Пользователь',
-        username: 'demo_user',
-      });
-      
-      console.log('Demo login result:', success);
-      
-      if (success) {
-        console.log('Demo login successful, redirecting...');
-        // Добавляем еще небольшую задержку перед редиректом
-        await new Promise(resolve => setTimeout(resolve, 300));
-        router.replace('/');
-      } else {
-        console.log('Demo login failed');
-        setErrorMessage('Не удалось войти в демо режим');
-        setAuthStatus('error');
-      }
-    } catch (error) {
-      console.error('Demo login error:', error);
-      setErrorMessage('Ошибка входа в демо режим');
-      setAuthStatus('error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   if (isLoading && authStatus === 'checking') {
     return (
@@ -235,7 +201,7 @@ export default function AuthScreen() {
             {authStatus === 'telegram' 
               ? 'Вход через Telegram'
               : authStatus === 'fallback'
-              ? 'Демо режим'
+              ? 'Требуется Telegram'
               : 'Ошибка авторизации'
             }
           </Text>
@@ -275,27 +241,13 @@ export default function AuthScreen() {
         {authStatus === 'fallback' && (
           <View style={styles.fallbackAuth}>
             <View style={styles.infoContainer}>
-              <AlertCircle size={24} color="#666666" />
-              <Text style={styles.infoTitle}>Приложение запущено вне Telegram</Text>
+              <AlertCircle size={24} color="#FF3B30" />
+              <Text style={styles.infoTitle}>Доступ только через Telegram</Text>
               <Text style={styles.infoText}>
-                Для полного функционала откройте приложение в Telegram Mini Apps
+                Это приложение работает только в Telegram Mini Apps.
+                Откройте приложение через бота в Telegram.
               </Text>
             </View>
-            
-            <TouchableOpacity 
-              style={[styles.demoButton, isLoading && styles.demoButtonDisabled]}
-              onPress={handleFallbackAuth}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <View style={styles.buttonContent}>
-                  <ActivityIndicator size="small" color="#FFFFFF" style={styles.buttonLoader} />
-                  <Text style={styles.demoButtonText}>Вход...</Text>
-                </View>
-              ) : (
-                <Text style={styles.demoButtonText}>Войти в демо режиме</Text>
-              )}
-            </TouchableOpacity>
           </View>
         )}
 
