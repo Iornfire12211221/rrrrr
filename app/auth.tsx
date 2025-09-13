@@ -177,15 +177,23 @@ export default function AuthScreen() {
     setIsLoading(true);
     try {
       console.log('Starting demo login...');
+      
+      // Добавляем небольшую задержку для показа анимации
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const success = await loginWithTelegram({
         telegramId: 12345,
         firstName: 'Демо',
         lastName: 'Пользователь',
         username: 'demo_user',
       });
+      
       console.log('Demo login result:', success);
+      
       if (success) {
         console.log('Demo login successful, redirecting...');
+        // Добавляем еще небольшую задержку перед редиректом
+        await new Promise(resolve => setTimeout(resolve, 300));
         router.replace('/');
       } else {
         console.log('Demo login failed');
