@@ -1094,14 +1094,34 @@ ${desc.trim() ? `Описание: ${desc.trim()}` : 'Описание отсу�
         
         {/* Add Post Button */}
         <TouchableOpacity
-          style={styles.rightSideButton}
-          onPress={() => router.push('/add-post')}
+          style={[
+            styles.rightSideButton,
+            cooldownSeconds > 0 && styles.rightSideButtonDisabled
+          ]}
+          onPress={() => {
+            if (cooldownSeconds > 0) {
+              Alert.alert(
+                'Подождите',
+                `Можно добавлять только 1 пост в минуту. Подождите ${cooldownSeconds} секунд.`,
+                [{ text: 'OK' }]
+              );
+              return;
+            }
+            router.push('/add-post');
+          }}
           activeOpacity={0.8}
           accessibilityRole="button"
           testID="add-post-fab"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          disabled={cooldownSeconds > 0}
         >
-          <Plus size={24} color="#FFFFFF" />
+          {cooldownSeconds > 0 ? (
+            <View style={styles.cooldownContainer}>
+              <Text style={styles.cooldownText}>{cooldownSeconds}</Text>
+            </View>
+          ) : (
+            <Plus size={24} color="#FFFFFF" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -2444,6 +2464,20 @@ const styles = StyleSheet.create({
   rightSideButtonLoading: {
     backgroundColor: '#5A9FFF',
     shadowOpacity: 0.2,
+  },
+  rightSideButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    shadowColor: '#9CA3AF',
+    shadowOpacity: 0.2,
+  },
+  cooldownContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cooldownText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   bottomSummaryButton: {
     position: 'absolute',
