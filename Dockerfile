@@ -1,16 +1,18 @@
 FROM node:20-alpine
 
-# System deps for some node modules (sharp, etc.)
-RUN apk add --no-cache libc6-compat
+# System deps
+RUN apk add --no-cache bash curl libc6-compat
 
 WORKDIR /app
 
-# Install bun and serve globally
-RUN npm install -g bun serve
+# Install Bun runtime properly
+RUN curl -fsSL https://bun.sh/install | bash && \
+    mv /root/.bun /opt/bun && \
+    ln -s /opt/bun/bin/bun /usr/local/bin/bun
 
 # Copy package files first for better caching
 COPY package.json bun.lock* ./
-RUN bun install
+RUN bun install --frozen-lockfile || bun install
 
 # Copy source code
 COPY . .
@@ -28,10 +30,7 @@ RUN npx expo export --platform web
 # Debug: List contents of dist directory
 RUN ls -la ./dist/ || echo "dist directory not found"
 RUN ls -la ./dist/_expo/ || echo "_expo directory not found"
-RUN cat ./dist/index.html | head -20 || echo "index.html not found"
-
-# Install curl for health checks
-RUN apk add --no-cache curl
+RUN sh -c "[ -f ./dist/index.html ] && head -20 ./dist/index.html || echo 'index.html not found'"
 
 EXPOSE 8081
 
@@ -39,5 +38,5 @@ EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8081/health || exit 1
 
-# Start the backend server with explicit port binding
+# Start the backend server
 CMD ["bun", "run", "backend/hono.ts"]
