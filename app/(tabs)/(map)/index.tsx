@@ -32,6 +32,7 @@ const MarkerComponent = Platform.select({
   default: () => require('@/components/MapView').Marker,
 })();
 import { DPSPost, POST_LIFETIMES } from '@/types';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width, height } = Dimensions.get('window');
@@ -1057,12 +1058,15 @@ ${desc.trim() ? `Описание: ${desc.trim()}` : 'Описание отсу�
       )}
 
       {/* Right Side Buttons - Moved Lower */}
-      <View style={styles.rightSideContainerLower}>
+      <View style={styles.rightSideContainerLower} pointerEvents="box-none">
         {/* Weekly Summary Button */}
         <TouchableOpacity
           style={[styles.rightSideButton, styles.summaryFab]}
           onPress={() => setShowWeeklySummary(true)}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          testID="open-weekly-summary"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <TrendingUp size={20} color="#FFFFFF" />
         </TouchableOpacity>
@@ -1076,6 +1080,9 @@ ${desc.trim() ? `Описание: ${desc.trim()}` : 'Описание отсу�
             onPress={userLocation ? centerOnUser : requestLocationPermission}
             activeOpacity={0.8}
             disabled={isLoadingLocation}
+            accessibilityRole="button"
+            testID="center-on-user"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {isLoadingLocation ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -1090,6 +1097,9 @@ ${desc.trim() ? `Описание: ${desc.trim()}` : 'Описание отсу�
           style={styles.rightSideButton}
           onPress={() => router.push('/add-post')}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          testID="add-post-fab"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Plus size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -1798,6 +1808,11 @@ ${desc.trim() ? `Описание: ${desc.trim()}` : 'Описание отсу�
           </ScrollView>
         </View>
       </Modal>
+      <LoadingOverlay
+        visible={isLoadingLocation || isUploadingImage || isSavingPost || isAnalyzingSeverity}
+        label={isSavingPost ? 'Сохранение...' : isUploadingImage ? 'Загрузка фото...' : isLoadingLocation ? 'Определение местоположения...' : isAnalyzingSeverity ? 'ИИ анализ...' : 'Загрузка...'}
+        testID="map-global-loading"
+      />
     </View>
   );
 }
@@ -2410,7 +2425,7 @@ const styles = StyleSheet.create({
     top: height * 0.35,
     alignItems: 'center',
     gap: 16,
-    zIndex: 100,
+    zIndex: 1000,
   },
   rightSideButton: {
     width: 56,
@@ -2424,6 +2439,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 10,
+    cursor: 'pointer',
   },
   rightSideButtonLoading: {
     backgroundColor: '#5A9FFF',

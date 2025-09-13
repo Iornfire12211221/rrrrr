@@ -19,6 +19,7 @@ import { MapPin, AlertCircle, Shield, AlertTriangle, Camera, Construction, Rabbi
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { DPSPost, POST_LIFETIMES } from '@/types';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import { getLandmarkForAddress, getRandomLandmark } from '@/constants/kingisepp-landmarks';
 
 const KINGISEPP_CENTER = {
@@ -766,6 +767,11 @@ export default function AddPostScreen() {
 
       </ScrollView>
       </KeyboardAvoidingView>
+      <LoadingOverlay
+        visible={isSaving || isUploadingImage || isAnalyzingSeverity || isGettingLocation}
+        label={isSaving ? 'Сохранение...' : isUploadingImage ? 'Загрузка фото...' : isAnalyzingSeverity ? 'ИИ анализ...' : isGettingLocation ? 'Определение местоположения...' : 'Загрузка...'}
+        testID="add-post-loading"
+      />
     </>
   );
 }

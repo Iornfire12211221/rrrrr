@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import { useApp } from '@/hooks/app-store';
 import { router } from 'expo-router';
 
@@ -19,7 +20,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066FF" />
+        <LoadingOverlay visible label="Инициализация..." />
       </View>
     );
   }
